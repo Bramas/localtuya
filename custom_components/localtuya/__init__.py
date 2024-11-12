@@ -33,6 +33,7 @@ from .config_flow import ENTRIES_VERSION, config_schema
 from .const import (
     ATTR_UPDATED_AT,
     CONF_NO_CLOUD,
+    CONF_ENABLE_DISCOVERY,
     CONF_PRODUCT_KEY,
     CONF_USER_ID,
     DATA_CLOUD,
@@ -172,13 +173,14 @@ async def async_setup(hass: HomeAssistant, config: dict):
         DOMAIN, SERVICE_SET_DP, _handle_set_dp, schema=SERVICE_SET_DP_SCHEMA
     )
 
-    discovery = TuyaDiscovery(_device_discovered)
-    try:
-        await discovery.start()
-        hass.data[DOMAIN][DATA_DISCOVERY] = discovery
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.exception("failed to set up discovery")
+    if CONF_ENABLE_DISCOVERY in hass.data[DOMAIN] and hass.data[DOMAIN][CONF_ENABLE_DISCOVERY]:
+        discovery = TuyaDiscovery(_device_discovered)
+        try:
+            await discovery.start()
+            hass.data[DOMAIN][DATA_DISCOVERY] = discovery
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("failed to set up discovery")
 
     return True
 
@@ -201,6 +203,7 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
             new_data[CONF_USER_ID] = ""
             new_data[CONF_USERNAME] = DOMAIN
             new_data[CONF_NO_CLOUD] = True
+            new_data[CONF_ENABLE_DISCOVERY] = True
             new_data[CONF_DEVICES] = {
                 config_entry.data[CONF_DEVICE_ID]: config_entry.data.copy()
             }
@@ -283,6 +286,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     unsub_listener = entry.add_update_listener(update_listener)
     hass.data[DOMAIN][entry.entry_id] = {UNSUB_LISTENER: unsub_listener}
+
+    hass.data[DOMAIN][CONF_ENABLE_DISCOVERY] = False
+    if CONF_ENABLE_DISCOVERY in entry.data:
+        hass.data[DOMAIN][CONF_ENABLE_DISCOVERY] = entry.data.get(CONF_ENABLE_DISCOVERY)
 
     return True
 

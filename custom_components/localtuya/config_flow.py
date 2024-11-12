@@ -38,6 +38,7 @@ from .const import (
     CONF_MANUAL_DPS,
     CONF_MODEL,
     CONF_NO_CLOUD,
+    CONF_ENABLE_DISCOVERY,
     CONF_PRODUCT_NAME,
     CONF_PROTOCOL_VERSION,
     CONF_RESET_DPIDS,
@@ -80,6 +81,7 @@ CLOUD_SETUP_SCHEMA = vol.Schema(
         vol.Optional(CONF_CLIENT_SECRET): cv.string,
         vol.Optional(CONF_USER_ID): cv.string,
         vol.Optional(CONF_USERNAME, default=DOMAIN): cv.string,
+        vol.Required(CONF_ENABLE_DISCOVERY, default=True): bool,
         vol.Required(CONF_NO_CLOUD, default=False): bool,
     }
 )
